@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loo-Line · Block C Hostel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+/* ─── Variables ─────────────────────────────────────────────────── */
+:root {
+  --tile-bg: #f0ede8;
+  --tile-line: #d8d4ce;
+  --ink: #1a1612;
+  --ink-soft: #5a5450;
+  --cream: #faf8f4;
+  --chrome: #c8c4bc;
+  --chrome-shine: #e8e4dc;
+
+  --green: #2d7a3a;
+  --green-glow: #4caf61;
+  --yellow: #c8860a;
+  --yellow-glow: #f0a820;
+  --red: #9c2020;
+  --red-glow: #e04040;
+  --orange: #b85a10;
+  --orange-glow: #e07820;
+  --blue: #1a4a8a;
+
+  --door-wood: #8B5E3C;
+  --door-dark: #5C3D1E;
+  --door-panel: #A0703C;
+
+  --shadow-hard: 4px 4px 0px var(--ink);
+  --shadow-tile: inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--tile-bg);
+  background-image:
+    linear-gradient(var(--tile-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tile-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  min-height: 100vh;
+  color: var(--ink);
+}
+
+/* ─── Header ────────────────────────────────────────────────────── */
+header {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 4px solid var(--chrome);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 0;
+}
+
+.logo {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.6rem;
+  letter-spacing: 3px;
+  color: var(--cream);
+  line-height: 1;
+}
+
+.logo-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--chrome);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: var(--green-glow);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green-glow);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+.clock-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--chrome);
+}
+
+/* ─── Main layout ───────────────────────────────────────────────── */
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 24px;
+}
+
+/* ─── Section labels ────────────────────────────────────────────── */
+.section-label {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 0.85rem;
+  letter-spacing: 4px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--chrome);
+}
+
+/* ─── Traffic density bar ───────────────────────────────────────── */
+.traffic-panel {
+  grid-column: 1 / -1;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  padding: 20px 24px;
+}
+
+/* ─── Queue Table ───────────────────────────────────────────────── */
+.queue-panel {
+  grid-column: 1 / -1;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  padding: 18px;
+}
+
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.queue-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--cream);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.queue-table th:first-child {
+  border-radius: 4px 0 0 0;
+}
+
+.queue-table th:last-child {
+  border-radius: 0 4px 0 0;
+}
+
+.queue-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--tile-line);
+  color: var(--ink);
+}
+
+.queue-table tr:nth-child(even) {
+  background: rgba(0,0,0,0.02);
+}
+
+.queue-table tr:first-child td:first-child {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.queue-table .position-col {
+  width: 60px;
+  color: var(--ink-soft);
+}
+
+.queue-table .name-col {
+  font-weight: 500;
+}
+
+.queue-table .dept-col {
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+}
+
+.queue-table .room-col {
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.queue-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--chrome);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.traffic-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.traffic-count {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.traffic-count span {
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-left: 4px;
+}
+
+.traffic-status-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border: 1.5px solid currentColor;
+  text-transform: uppercase;
+  transition: all 0.4s;
+}
+.traffic-status-label.low    { color: var(--green); }
+.traffic-status-label.moderate { color: var(--yellow); }
+.traffic-status-label.high   { color: var(--red); }
+
+.traffic-bar-track {
+  height: 22px;
+  background: var(--tile-bg);
+  border: 1.5px solid var(--chrome);
+  position: relative;
+  overflow: hidden;
+}
+
+.traffic-bar-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s;
+  position: relative;
+}
+
+.traffic-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 12px,
+    rgba(255,255,255,0.2) 12px,
+    rgba(255,255,255,0.2) 14px
+  );
+}
+
+.traffic-bar-fill.low      { background: var(--green); }
+.traffic-bar-fill.moderate { background: var(--yellow); }
+.traffic-bar-fill.high     { background: var(--red); animation: bar-pulse 1s ease-in-out infinite; }
+
+@keyframes bar-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+.traffic-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-soft);
+}
+
+/* ─── Bathroom stalls ───────────────────────────────────────────── */
+.bathrooms-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.stall-card {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  display: flex;
+  flex-direction: column;
+}
+
+.stall-header {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stall-name {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+}
+
+.stall-location {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--chrome);
+  letter-spacing: 1px;
+}
+
+/* ─── Door visual ───────────────────────────────────────────────── */
+.door-scene {
+  position: relative;
+  height: 200px;
+  background: #e8e0d8;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow: hidden;
+  perspective: 600px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Floor line */
+.door-scene::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: #ccc;
+  border-top: 2px solid #aaa;
+}
+
+/* Door frame */
+.door-frame {
+  position: absolute;
+  bottom: 24px;
+  width: 100px;
+  height: 150px;
+  background: #6b5040;
+  border: 3px solid #4a3020;
+  transform-origin: left center;
+  z-index: 1;
+}
+
+/* Door swing animation */
+.door-frame.vacant {
+  transform: rotateY(0deg);
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.door-frame.in-use {
+  transform: rotateY(-75deg);
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.door-frame.out-of-order {
+  transform: rotateY(0deg);
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Door panel details */
+.door-panel-top,
+.door-panel-bot {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  background: #7a6050;
+  border: 2px solid #5a4030;
+}
+.door-panel-top { top: 12px; height: 50px; }
+.door-panel-bot { bottom: 12px; height: 50px; }
+
+/* Door knob */
+.door-knob {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f0e8d0, #a08060);
+  border: 1px solid #806040;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Lock indicator */
+.lock-indicator {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  z-index: 10;
+  transition: background-color 0.5s, box-shadow 0.5s;
+}
+
+.lock-indicator.vacant {
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green-glow);
+}
+.lock-indicator.in-use {
+  background: var(--red);
+  box-shadow: 0 0 10px var(--red-glow);
+  animation: indicator-blink 2s ease-in-out infinite;
+}
+.lock-indicator.out-of-order {
+  background: var(--orange);
+  box-shadow: 0 0 10px var(--orange-glow);
+}
+
+@keyframes indicator-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Maintenance overlay */
+.maintenance-overlay {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(184,90,16,0.15),
+    rgba(184,90,16,0.15) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: 5;
+}
+
+.maintenance-overlay.visible {
+  opacity: 1;
+}
+
+.maintenance-tag {
+  background: var(--orange);
+  color: white;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  padding: 4px 12px;
+  transform: rotate(-12deg);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* ─── Stall info ────────────────────────────────────────────────── */
+.stall-info {
+  padding: 16px;
+  border-top: 2px solid var(--ink);
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.status-badge {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  border: 2px solid currentColor;
+  transition: all 0.4s;
+}
+.status-badge.Vacant      { color: var(--green); }
+.status-badge.In-Use      { color: var(--red); }
+.status-badge.Out-of-Order { color: var(--orange); }
+
+.countdown {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 1px;
+  transition: color 0.3s;
+}
+
+.countdown.urgent { color: var(--red); animation: count-pulse 0.5s ease-in-out infinite; }
+
+@keyframes count-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ─── Stall controls ────────────────────────────────────────────── */
+.stall-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1.5px solid var(--tile-line);
+}
+
+.btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  background: var(--cream);
+  color: var(--ink);
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.btn:hover:not(:disabled) { background: var(--ink); color: var(--cream); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: none; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-lock-in  { border-color: var(--red); color: var(--red); }
+.btn-lock-in:hover:not(:disabled)  { background: var(--red); color: white; }
+.btn-lock-out { border-color: var(--orange); color: var(--orange); }
+.btn-lock-out:hover:not(:disabled) { background: var(--orange); color: white; }
+.btn-unlock   { border-color: var(--green); color: var(--green); grid-column: 1 / -1; }
+.btn-unlock:hover:not(:disabled)   { background: var(--green); color: white; }
+
+/* ─── Duration selector ─────────────────────────────────────────── */
+.duration-select {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.duration-select label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-soft);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.duration-select select {
+  flex: 1;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  padding: 5px 8px;
+  border: 1.5px solid var(--chrome);
+  background: var(--cream);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* ─── Right sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Control panel ─────────────────────────────────────────────── */
+.control-panel {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  padding: 18px;
+}
+
+.user-select-wrap {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+select, input {
+  width: 100%;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  padding: 8px 10px;
+  border: 2px solid var(--chrome);
+  background: var(--tile-bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+select:focus, input:focus { outline: none; border-color: var(--ink); }
+
+.queue-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-join  { border-color: var(--blue); color: var(--blue); }
+.btn-join:hover:not(:disabled)  { background: var(--blue); color: white; }
+.btn-leave { border-color: var(--ink-soft); color: var(--ink-soft); }
+
+/* ─── Speed control ─────────────────────────────────────────────── */
+.speed-panel {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  padding: 18px;
+}
+
+.speed-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.speed-btn {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  padding: 8px 4px;
+  border: 2px solid var(--chrome);
+  background: var(--cream);
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.speed-btn:hover { border-color: var(--ink); color: var(--ink); }
+.speed-btn.active {
+  background: var(--ink);
+  color: var(--cream);
+  border-color: var(--ink);
+}
+
+/* ─── Notification log ──────────────────────────────────────────── */
+.notif-panel {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  padding: 18px;
+  flex: 1;
+}
+
+.notif-log {
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--chrome) transparent;
+}
+
+.notif-item {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--tile-line);
+  animation: slide-in 0.3s ease-out;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.notif-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--chrome);
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.notif-msg {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.notif-empty {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--chrome);
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ─── Admin strip ───────────────────────────────────────────────── */
+.admin-strip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(26,22,18,0.05);
+  border: 1px dashed var(--chrome);
+}
+
+.admin-strip span {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+  letter-spacing: 1px;
+}
+
+.btn-reset {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 5px 12px;
+  border: 1.5px solid var(--red);
+  background: transparent;
+  color: var(--red);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.btn-reset:hover { background: var(--red); color: white; }
+
+/* ─── Connection indicator ──────────────────────────────────────── */
+.conn-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  letter-spacing: 1px;
+}
+.conn-status.connected { color: var(--green-glow); }
+.conn-status.disconnected { color: var(--red-glow); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <div>
+      <div class="logo">Loo-Line</div>
+      <div class="logo-sub">Block C Hostel · Virtual Queue System</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="conn-status disconnected" id="connStatus">● OFFLINE</span>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="clock-display" id="clockDisplay">--:--:--</div>
+  </div>
+</header>
+
+<!-- Main app -->
+<div class="app">
+
+  <!-- Traffic bar -->
+  <div class="traffic-panel">
+    <div class="section-label">Queue Density</div>
+    <div class="traffic-meta">
+      <div>
+        <div class="traffic-count" id="queueCount">0 <span>waiting</span></div>
+      </div>
+      <div class="traffic-status-label low" id="trafficLabel">LOW TRAFFIC</div>
+    </div>
+    <div class="traffic-bar-track">
+      <div class="traffic-bar-fill low" id="trafficBar" style="width: 0%"></div>
+    </div>
+    <div class="traffic-ticks">
+      <span>0</span><span>2</span><span>4</span><span>6</span><span>8+</span>
+    </div>
+  </div>
+
+  <!-- Queue Table -->
+  <div class="queue-panel">
+    <div class="section-label">Next in Queue</div>
+    <table class="queue-table" id="queueTable">
+      <thead>
+        <tr>
+          <th class="position-col">#</th>
+          <th class="name-col">Name</th>
+          <th class="dept-col">Department</th>
+          <th class="room-col">Assigned Room</th>
+        </tr>
+      </thead>
+      <tbody id="queueTableBody">
+        <!-- Queue entries injected by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Bathroom stalls -->
+  <div>
+    <div class="section-label">Bathroom Stalls</div>
+    <div class="bathrooms-grid" id="bathroomsGrid">
+      <!-- Stalls injected by JS -->
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- User control panel -->
+    <div class="control-panel">
+      <div class="section-label">Action Panel</div>
+      <div class="user-select-wrap">
+        <div class="field-label">Select User (Demo)</div>
+        <select id="userSelect">
+          <option value="">— choose user —</option>
+        </select>
+      </div>
+      <div class="queue-actions">
+        <button class="btn btn-join" id="btnJoin" onclick="joinQueue()">Join Queue</button>
+        <button class="btn btn-leave" id="btnLeave" onclick="leaveQueue()">Leave Queue</button>
+      </div>
+    </div>
+
+    <!-- Sim speed -->
+    <div class="speed-panel">
+      <div class="section-label">Simulation Speed</div>
+      <div class="speed-grid">
+        <div class="speed-btn" onclick="setSpeed(1)">1×</div>
+        <div class="speed-btn active" onclick="setSpeed(5)">5×</div>
+        <div class="speed-btn" onclick="setSpeed(10)">10×</div>
+        <div class="speed-btn" onclick="setSpeed(30)">30×</div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notif-panel">
+      <div class="section-label">Activity Log</div>
+      <div class="notif-log" id="notifLog">
+        <div class="notif-empty">No activity yet...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Admin strip -->
+  <div class="admin-strip">
+    <span>ADMIN</span>
+    <button class="btn-reset" onclick="resetAll()">⟳ Reset System</button>
+    <span id="simSpeedDisplay">SIM SPEED: 5×</span>
+  </div>
+
+</div>
+
+<script>
+console.log("Script started 🚀");
+// ─── State ────────────────────────────────────────────────────────
+let state = { bathrooms: [], queueCount: 0, trafficStatus: 'low', simSpeed: 5 };
+let selectedUser = '';
+let socket = null;
+
+function showBanner(msg, color) {
+  const banner = document.createElement('div');
+  banner.textContent = msg;
+  banner.style.cssText = `
+    position:fixed; top:70px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--cream); padding:12px 24px;
+    border:2px solid var(--${color}-glow); font-family:'DM Mono',monospace;
+    font-size:0.85rem; z-index:9999; box-shadow:var(--shadow-hard);
+    animation: fadeOut 4s forwards;
+  `;
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 4000);
+}
+
+// ─── WebSocket setup ──────────────────────────────────────────────
+function initSocket() {
+  socket = io({ transports: ['websocket', 'polling'] });
+
+  socket.on('connect', () => {
+    document.getElementById('connStatus').textContent = '● ONLINE';
+    document.getElementById('connStatus').className = 'conn-status connected';
+    socket.emit('request_state');
+  });
+  
+  socket.on('disconnect', () => {
+  document.getElementById('connStatus').textContent = '● OFFLINE';
+  document.getElementById('connStatus').className = 'conn-status disconnected';
+});
+
+  socket.on('queue_reminder', (data) => {
+  if (data.userId === selectedUser) {
+    showBanner(data.message, 'yellow');
+  }
+});
+  
+socket.on('sync_state', (data) => {
+    state = data;
+    renderAll();
+  });
+
+  socket.on('overstay_warning', (data) => {
+    showBanner(`⚠️ ${data.message}`, 'orange');
+  });
+
+  socket.on('your_turn_soon', (data) => {
+    if (data.userId === selectedUser) {
+      showBanner(`🔔 ${data.message}`, 'green');
+    }
+  });
+}
+
+function updateQueueUI(queue) {
+  const list = document.getElementById("queueList");
+  list.innerHTML = "";
+
+  queue.forEach(user => {
+    const li = document.createElement("li");
+    li.innerText = `${user.DisplayName} - Wait: ${user.estimatedWait}s`;
+
+    if (user.allocatedRoom) {
+      li.innerText += ` (Next: ${user.allocatedRoom})`;
+    }
+
+    list.appendChild(li);
+  });
+}
+
+function updateTrafficIndicator(status) {
+  const el = document.getElementById("traffic");
+
+  el.innerText = status.toUpperCase();
+
+  el.style.color =
+    status === "low" ? "green" :
+    status === "moderate" ? "orange" :
+    "red";
+}
+
+function updateBathroomUI(bathrooms) {
+  const container = document.getElementById("bathrooms");
+  container.innerHTML = "";
+
+  bathrooms.forEach(b => {
+    const div = document.createElement("div");
+
+    div.innerText =
+      `${b.RoomId} - ${b.Status} (${b.TimeRemaining}s)`;
+
+    container.appendChild(div);
+  });
+}
+
+// Update this function in index.html script section
+function updateQueue(queue) {
+  const tbody = document.getElementById('queueTableBody');
+  const emptyMsg = document.getElementById('queueEmpty');
+  
+  if (!queue || queue.length === 0) {
+    tbody.innerHTML = '';
+    emptyMsg.style.display = 'block';
+    return;
+  }
+  
+  emptyMsg.style.display = 'none';
+  tbody.innerHTML = queue.map(item => {
+    // Convert seconds to a readable MM:SS format
+    const waitMin = Math.floor(item.estimatedWait / 60);
+    const waitSec = item.estimatedWait % 60;
+    const waitStr = item.estimatedWait === 0 ? "READY" : `${waitMin}m ${waitSec}s`;
+    
+    return `
+      <tr>
+        <td class="position-col">#${item.position}</td>
+        <td class="name-col">${item.DisplayName}</td>
+        <td class="dept-col">${item.Department}</td>
+        <td class="room-col">${item.allocatedRoom || 'TBD'}</td>
+        <td class="wait-col" style="color: var(--orange); font-weight: 600;">
+          ${waitStr}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ─── Rendering ────────────────────────────────────────────────────
+function renderAll() {
+  renderTraffic();
+  renderQueue();
+  renderBathrooms();
+  renderNotifications();
+  document.getElementById('simSpeedDisplay').textContent = `SIM SPEED: ${state.simSpeed}×`;
+  updateSpeedButtons(state.simSpeed);
+}
+
+function renderTraffic() {
+  const count = state.queueCount;
+  const status = state.trafficStatus;
+  document.getElementById('queueCount').innerHTML = `${count} <span>waiting</span>`;
+
+  const bar = document.getElementById('trafficBar');
+  const label = document.getElementById('trafficLabel');
+
+  // Bar width: 0 people = 0%, 8+ = 100%
+  const pct = Math.min(100, (count / 8) * 100);
+  bar.style.width = pct + '%';
+  bar.className = `traffic-bar-fill ${status}`;
+
+  label.className = `traffic-status-label ${status}`;
+  const labels = { low: 'LOW TRAFFIC', moderate: 'MODERATE TRAFFIC', high: 'HIGH TRAFFIC' };
+  label.textContent = labels[status] || 'LOW TRAFFIC';
+}
+
+function renderQueue() {
+  const tbody = document.getElementById('queueTableBody');
+  const queue = state.queue || [];
+
+  if (queue.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="queue-empty">No one in queue</td></tr>`;
+    return;
+  }
+
+  // Get list of vacant rooms for assignment
+  const vacantRooms = state.bathrooms.filter(b => b.Status === 'Vacant').map(b => b.RoomId);
+
+  tbody.innerHTML = queue.map((entry, index) => {
+    // Assign room based on position - first person gets first vacant room
+    const assignedRoom = index < vacantRooms.length ? vacantRooms[index] : 'Waiting...';
+    return `
+      <tr>
+        <td class="position-col">${entry.position}</td>
+        <td class="name-col">${entry.DisplayName}</td>
+        <td class="dept-col">${entry.Department || '-'}</td>
+        <td class="room-col">${assignedRoom}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderBathrooms() {
+  const grid = document.getElementById('bathroomsGrid');
+  grid.innerHTML = '';
+
+  state.bathrooms.forEach(b => {
+    const statusClass = b.Status.replace(/\s+/g, '-');
+    const isVacant = b.Status === 'Vacant';
+    const isInUse = b.Status === 'In Use';
+    const isOOO = b.Status === 'Out of Order';
+    const timeDisplay = formatTime(b.TimeRemaining);
+    const isUrgent = isInUse && b.TimeRemaining <= 30 && b.TimeRemaining > 0;
+
+    const card = document.createElement('div');
+    card.className = 'stall-card';
+    card.innerHTML = `
+      <div class="stall-header">
+        <div>
+          <div class="stall-name">${b.RoomName}</div>
+          <div class="stall-location">Block C · Ground Floor</div>
+        </div>
+      </div>
+
+      <div class="door-scene">
+        <div class="lock-indicator ${statusClass.toLowerCase().replace(/-/g, '-')} ${b.Status === 'In Use' ? 'in-use' : b.Status === 'Out of Order' ? 'out-of-order' : 'vacant'}"></div>
+        <div class="maintenance-overlay ${isOOO ? 'visible' : ''}">
+          <div class="maintenance-tag">MAINTENANCE</div>
+        </div>
+        <div class="door-frame ${isInUse ? 'in-use' : isOOO ? 'out-of-order' : 'vacant'}">
+          <div class="door-panel-top"></div>
+          <div class="door-panel-bot"></div>
+          <div class="door-knob"></div>
+        </div>
+      </div>
+
+      <div class="stall-info">
+        <div class="status-row">
+          <div class="status-badge ${statusClass}">${b.Status}</div>
+          <div class="countdown ${isUrgent ? 'urgent' : ''}" id="cd-${b.RoomId}">
+            ${isInUse ? timeDisplay : '—'}
+          </div>
+        </div>
+      </div>
+
+      <div class="stall-controls">
+        <div class="duration-select">
+          <label>DURATION:</label>
+          <select id="dur-${b.RoomId}">
+            <option value="120">2 min</option>
+            <option value="300" selected>5 min</option>
+            <option value="600">10 min</option>
+            <option value="900">15 min</option>
+            <option value="1800">30 min</option>
+          </select>
+        </div>
+        <button class="btn btn-lock-in" onclick="lockRoom('${b.RoomId}','Inside')" ${!isVacant ? 'disabled' : ''}>🔒 Lock Inside</button>
+        <button class="btn btn-lock-out" onclick="lockRoom('${b.RoomId}','Outside')" ${!isVacant ? 'disabled' : ''}>🔧 Maintenance</button>
+        <button class="btn btn-unlock" onclick="unlockRoom('${b.RoomId}')" ${isVacant ? 'disabled' : ''}>🔓 Unlock</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderNotifications() {
+  const log = document.getElementById('notifLog');
+  const notifs = state.notifications || [];
+
+  if (notifs.length === 0) {
+    log.innerHTML = '<div class="notif-empty">No activity yet...</div>';
+    return;
+  }
+
+  log.innerHTML = notifs.map(n => `
+    <div class="notif-item">
+      <div class="notif-time">${n.timestamp}</div>
+      <div class="notif-msg">${n.message}</div>
+    </div>
+  `).join('');
+}
+
+function formatTime(secs) {
+  if (!secs || secs <= 0) return '0:00';
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────
+async function lockRoom(roomId, lockType) {
+  if (!selectedUser) { showBanner('Select user first', 'red'); return; }
+
+  const duration = parseInt(document.getElementById(`dur-${roomId}`)?.value || 300);
+
+  const res = await fetch('/api/lock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId, lockType, userId: selectedUser, duration })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) showBanner(data.error || 'Lock failed', 'red');
+}
+
+async function unlockRoom(roomId) {
+  const res = await fetch('/api/unlock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) showBanner(data.error || 'Unlock failed', 'red');
+}
+
+async function joinQueue() {
+  if (!selectedUser) { alert('Please select a user first.'); return; }
+
+  const btn = document.getElementById('btnJoin');
+  btn.disabled = true;
+
+  const res = await fetch('/api/queue/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: selectedUser })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) showBanner(data.error || 'Could not join queue.', 'red');
+
+  setTimeout(() => btn.disabled = false, 1500);
+}
+
+async function leaveQueue() {
+  if (!selectedUser) { alert('Please select a user first.'); return; }
+  const res = await fetch('/api/queue/leave', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: selectedUser })
+  });
+  const data = await res.json();
+  if (!res.ok) showBanner(data.error || 'Not in queue.', 'red');
+}
+
+async function setSpeed(speed) {
+  await fetch('/api/sim-speed', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ speed })
+  });
+  updateSpeedButtons(speed);
+}
+
+function updateSpeedButtons(speed) {
+  const map = { 1: '1×', 5: '5×', 10: '10×', 30: '30×' };
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === (map[speed] || ''));
+  });
+}
+
+async function resetAll() {
+  if (!confirm('Reset all bathrooms and queue?')) return;
+  await fetch('/api/reset', { method: 'POST' });
+}
+
+// ─── User selector ────────────────────────────────────────────────
+async function loadUsers() {
+  console.log("loadUsers() called 🔥");
+
+  const res = await fetch('/api/users');
+  const users = await res.json();
+
+  console.log("Users:", users);
+
+  const sel = document.getElementById('userSelect');
+
+  // reset dropdown
+  sel.innerHTML = '<option value="">— choose user —</option>';
+
+  users.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.UserId;
+    opt.textContent = `${u.DisplayName} · ${u.Department}`;
+    sel.appendChild(opt);
+  });
+
+  // ✅ THIS LINE IS REQUIRED
+  sel.addEventListener('change', () => {
+    selectedUser = sel.value;
+    console.log("Selected user:", selectedUser);
+  });
+}
+
+// ─── Clock ────────────────────────────────────────────────────────
+function startClock() {
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById('clockDisplay').textContent =
+      now.toLocaleTimeString('en-IN', { hour12: false });
+  }, 1000);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────
+window.onload = () => {
+  console.log("Page loaded ✅");
+
+  loadUsers();     // 👈 must run
+  initSocket();
+  startClock();
+};
+</script>
+</body>
+</html>

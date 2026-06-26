@@ -1,0 +1,156 @@
+[
+  {
+    "id": 22,
+    "message": "\u2705 Stall A is now vacant.",
+    "type": "vacated",
+    "userId": null,
+    "timestamp": "13:39:36"
+  },
+  {
+    "id": 21,
+    "message": "\ud83d\udebf Stall A is now free \u2014 your turn!",
+    "type": "turn_ready",
+    "userId": "u002",
+    "timestamp": "13:39:22"
+  },
+  {
+    "id": 20,
+    "message": "\ud83c\udfaf Stall A auto-assigned to P. Nair (queue)",
+    "type": "auto_boarded",
+    "userId": null,
+    "timestamp": "13:39:22"
+  },
+  {
+    "id": 19,
+    "message": "\ud83d\udebf Stall A is now free \u2014 your turn!",
+    "type": "turn_ready",
+    "userId": "u001",
+    "timestamp": "13:39:10"
+  },
+  {
+    "id": 18,
+    "message": "\ud83c\udfaf Stall A auto-assigned to A. Sharma (queue)",
+    "type": "auto_boarded",
+    "userId": null,
+    "timestamp": "13:39:10"
+  },
+  {
+    "id": 17,
+    "message": "\ud83d\udd12 Stall A locked \u2014 estimated 5m 0s",
+    "type": "locked",
+    "userId": null,
+    "timestamp": "13:38:59"
+  },
+  {
+    "id": 16,
+    "message": "\ud83d\udc64 Person joined the queue (position #2)",
+    "type": "joined",
+    "userId": null,
+    "timestamp": "13:38:37"
+  },
+  {
+    "id": 15,
+    "message": "\ud83d\udc64 Person joined the queue (position #1)",
+    "type": "joined",
+    "userId": null,
+    "timestamp": "13:38:32"
+  },
+  {
+    "id": 14,
+    "message": "\ud83d\udd13 Stall A unlocked and vacant.",
+    "type": "unlocked",
+    "userId": null,
+    "timestamp": "13:11:52"
+  },
+  {
+    "id": 13,
+    "message": "\ud83d\udd27 Stall A marked as Out of Order (maintenance)",
+    "type": "maintenance",
+    "userId": null,
+    "timestamp": "13:11:47"
+  },
+  {
+    "id": 12,
+    "message": "\u2705 Stall A is now vacant.",
+    "type": "vacated",
+    "userId": null,
+    "timestamp": "13:11:44"
+  },
+  {
+    "id": 11,
+    "message": "\ud83d\udebf Stall A is now free \u2014 your turn!",
+    "type": "turn_ready",
+    "userId": "u001",
+    "timestamp": "13:11:43"
+  },
+  {
+    "id": 10,
+    "message": "\ud83d\udd12 Stall A locked \u2014 estimated 5m 0s",
+    "type": "locked",
+    "userId": null,
+    "timestamp": "13:11:10"
+  },
+  {
+    "id": 9,
+    "message": "\ud83d\udc64 Person joined the queue (position #1)",
+    "type": "joined",
+    "userId": null,
+    "timestamp": "13:11:02"
+  },
+  {
+    "id": 8,
+    "message": "\u2705 Stall A is now vacant.",
+    "type": "vacated",
+    "userId": null,
+    "timestamp": "12:56:39"
+  },
+  {
+    "id": 7,
+    "message": "\ud83d\udebf Stall A is now free \u2014 your turn!",
+    "type": "turn_ready",
+    "userId": "u002",
+    "timestamp": "12:56:39"
+  },
+  {
+    "id": 6,
+    "message": "\ud83d\udd12 Stall A locked \u2014 estimated 5m 0s",
+    "type": "locked",
+    "userId": null,
+    "timestamp": "12:55:35"
+  },
+  {
+    "id": 5,
+    "message": "\u2705 Stall A is now vacant.",
+    "type": "vacated",
+    "userId": null,
+    "timestamp": "12:55:29"
+  },
+  {
+    "id": 4,
+    "message": "\ud83d\udebf Stall A is now free \u2014 your turn!",
+    "type": "turn_ready",
+    "userId": "u001",
+    "timestamp": "12:55:29"
+  },
+  {
+    "id": 3,
+    "message": "\ud83d\udd12 Stall A locked \u2014 estimated 5m 0s",
+    "type": "locked",
+    "userId": null,
+    "timestamp": "12:54:24"
+  },
+  {
+    "id": 2,
+    "message": "\ud83d\udc64 Person joined the queue (position #2)",
+    "type": "joined",
+    "userId": null,
+    "timestamp": "12:54:16"
+  },
+  {
+    "id": 1,
+    "message": "\ud83d\udc64 Person joined the queue (position #1)",
+    "type": "joined",
+    "userId": null,
+    "timestamp": "12:54:11"
+  }
+]

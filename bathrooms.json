@@ -1,0 +1,24 @@
+[
+  {
+    "RoomId": "b001",
+    "RoomName": "Stall A",
+    "BuildingName": "Block C Hostel",
+    "Location": "Ground Floor, East Wing",
+    "Status": "In Use",
+    "TimeRemaining": 295,
+    "LockType": "Inside",
+    "OccupiedBy": "u001",
+    "TotalDuration": 300
+  },
+  {
+    "RoomId": "b002",
+    "RoomName": "Stall B",
+    "BuildingName": "Block C Hostel",
+    "Location": "Ground Floor, East Wing",
+    "Status": "In Use",
+    "TimeRemaining": 300,
+    "LockType": "Inside",
+    "OccupiedBy": "u002",
+    "TotalDuration": 300
+  }
+]
